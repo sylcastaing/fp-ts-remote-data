@@ -1,0 +1,55 @@
+{
+  "version": "0.1.0",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "name": "fp-ts-remote-data",
+  "author": "Sylvain Castaing",
+  "module": "dist/fp-ts-remote-data.esm.js",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "start": "tsdx watch",
+    "build": "tsdx build",
+    "test": "tsdx test",
+    "lint": "tsdx lint",
+    "prepare": "tsdx build",
+    "size": "size-limit",
+    "analyze": "size-limit --why"
+  },
+  "peerDependencies": {},
+  "devDependencies": {
+    "@size-limit/preset-small-lib": "^4.9.2",
+    "husky": "^5.0.9",
+    "size-limit": "^4.9.2",
+    "tsdx": "^0.14.1",
+    "tslib": "^2.1.0",
+    "typescript": "^4.1.5"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "tsdx lint"
+    }
+  },
+  "prettier": {
+    "printWidth": 80,
+    "semi": true,
+    "singleQuote": true,
+    "trailingComma": "es5"
+  },
+  "size-limit": [
+    {
+      "path": "dist/fp-ts-remote-data.cjs.production.min.js",
+      "limit": "10 KB"
+    },
+    {
+      "path": "dist/fp-ts-remote-data.esm.js",
+      "limit": "10 KB"
+    }
+  ],
+  "engines": {
+    "node": ">=10"
+  }
+}
