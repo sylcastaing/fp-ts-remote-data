@@ -1,8 +1,10 @@
 import * as RD from '../src';
 import * as EI from 'fp-ts/Either';
 import * as O from 'fp-ts/Option';
-import { pipe, identity } from 'fp-ts/function';
+import { pipe, identity, Predicate } from 'fp-ts/function';
 import { monoidString } from 'fp-ts/Monoid';
+import { eqNumber } from 'fp-ts/Eq';
+import assert from 'assert';
 
 describe('RemoteData', () => {
   describe('guards', () => {
@@ -42,6 +44,14 @@ describe('RemoteData', () => {
     it('fromOption', () => {
       expect(RD.fromOption(() => 'none')(O.some(1))).toStrictEqual(RD.success(1));
       expect(RD.fromOption(() => 'none')(O.none)).toStrictEqual(RD.failure('none'));
+    });
+
+    it('fromPredicate', () => {
+      const predicate: Predicate<number> = n => n > 2;
+      const onFalse = () => 'error';
+
+      expect(RD.fromPredicate(predicate, onFalse)(1)).toStrictEqual(RD.failure('error'));
+      expect(RD.fromPredicate(predicate, onFalse)(3)).toStrictEqual(RD.success(3));
     });
   });
 
@@ -92,6 +102,22 @@ describe('RemoteData', () => {
   });
 
   describe('combinators', () => {
+    it('fromNullableK', () => {
+      const f = RD.fromNullableK(() => 'error')((n: number) => (n > 0 ? n : null));
+
+      expect(f(1)).toStrictEqual(RD.success(1));
+      expect(f(-1)).toStrictEqual(RD.failure('error'));
+    });
+
+    it('chainNullableK', () => {
+      const f = RD.chainNullableK(() => 'error')((n: number) => (n > 0 ? n : null));
+
+      expect(f(RD.success(1))).toStrictEqual(RD.success(1));
+      expect(f(RD.success(-1))).toStrictEqual(RD.failure('error'));
+      expect(f(RD.failure('a'))).toStrictEqual(RD.failure('a'));
+      expect(f(RD.loading)).toStrictEqual(RD.loading);
+    });
+
     it('swap', () => {
       expect(RD.swap(RD.success(1))).toStrictEqual(RD.failure(1));
       expect(RD.swap(RD.failure('error'))).toStrictEqual(RD.success('error'));
@@ -108,6 +134,14 @@ describe('RemoteData', () => {
       expect(filterOrElse(RD.success(1))).toStrictEqual(RD.failure(`1 too small`));
       expect(filterOrElse(RD.failure('error'))).toStrictEqual(RD.failure(`error`));
       expect(filterOrElse(RD.loading)).toStrictEqual(RD.loading);
+    });
+
+    it('orElse', () => {
+      const f = (e: string) => RD.success(e.length);
+
+      expect(RD.orElse(f)(RD.success(2))).toStrictEqual(RD.success(2));
+      expect(RD.orElse(f)(RD.failure('error'))).toStrictEqual(RD.success(5));
+      expect(RD.orElse(f)(RD.loading)).toStrictEqual(RD.loading);
     });
   });
 
@@ -148,6 +182,14 @@ describe('RemoteData', () => {
       expect(RD.ap(RD.failure('e'))(RD.failure('error'))).toStrictEqual(RD.failure('error'));
     });
 
+    it('apFirst', () => {
+      expect(pipe(RD.success('a'), RD.apFirst(RD.success(1)))).toStrictEqual(RD.success('a'));
+    });
+
+    it('apSecond', () => {
+      expect(pipe(RD.success('a'), RD.apSecond(RD.success(1)))).toStrictEqual(RD.success(1));
+    });
+
     it('of', () => {
       expect(RD.of(1)).toStrictEqual(RD.success(1));
     });
@@ -186,6 +228,18 @@ describe('RemoteData', () => {
           RD.chain((s: string) => RD.success(s.length)),
         ),
       ).toStrictEqual(RD.loading);
+    });
+
+    it('chainFirst', () => {
+      const f = (s: string) => RD.success<string, number>(s.length);
+      assert.deepStrictEqual(pipe(RD.success('abc'), RD.chainFirst(f)), RD.success('abc'));
+      assert.deepStrictEqual(pipe(RD.failure<string, string>('maError'), RD.chainFirst(f)), RD.failure('maError'));
+    });
+
+    it('chainFirstW', () => {
+      const f = (s: string) => RD.success<boolean, number>(s.length);
+      assert.deepStrictEqual(pipe(RD.success('abc'), RD.chainFirstW(f)), RD.success('abc'));
+      assert.deepStrictEqual(pipe(RD.failure<string, string>('maError'), RD.chainFirstW(f)), RD.failure('maError'));
     });
 
     it('alt', () => {
@@ -277,5 +331,47 @@ describe('RemoteData', () => {
       expect(sequence(RD.success(O.none))).toStrictEqual(O.none);
       expect(sequence(RD.loading)).toStrictEqual(O.some(RD.loading));
     });
+  });
+
+  describe('utils', () => {
+    it('elem', () => {
+      expect(RD.elem(eqNumber)(2)(RD.success(2))).toBeTruthy();
+      expect(RD.elem(eqNumber)(3)(RD.success(2))).toBeFalsy();
+      expect(RD.elem(eqNumber)(3)(RD.failure('error'))).toBeFalsy();
+      expect(RD.elem(eqNumber)(3)(RD.loading)).toBeFalsy();
+
+      expect(RD.elem(eqNumber)(2, RD.success(2))).toBeTruthy();
+      expect(RD.elem(eqNumber)(3, RD.success(2))).toBeFalsy();
+      expect(RD.elem(eqNumber)(3, RD.failure('error'))).toBeFalsy();
+      expect(RD.elem(eqNumber)(3, RD.loading)).toBeFalsy();
+    });
+
+    it('exists', () => {
+      const f = (nb: number) => nb > 0;
+
+      expect(RD.exists(f)(RD.success(2))).toBeTruthy();
+      expect(RD.exists(f)(RD.success(-1))).toBeFalsy();
+      expect(RD.exists(f)(RD.failure('error'))).toBeFalsy();
+      expect(RD.exists(f)(RD.loading)).toBeFalsy();
+    });
+  });
+
+  it('monad', () => {
+    expect(RD.remoteData.map(RD.success(1), a => a + 1)).toStrictEqual(RD.success(2));
+    expect(
+      RD.remoteData.ap(
+        RD.success((a: number) => a + 1),
+        RD.success(1),
+      ),
+    ).toStrictEqual(RD.success(2));
+    expect(RD.remoteData.chain(RD.success(1), a => RD.success(a + 1))).toStrictEqual(RD.success(2));
+    expect(RD.remoteData.reduce(RD.success(1), 1, (a, b) => a + b)).toBe(2);
+    expect(RD.remoteData.foldMap(monoidString)(RD.success('a'), identity)).toBe('a');
+    expect(RD.remoteData.reduceRight(RD.success(1), 1, (a, b) => a + b)).toBe(2);
+    expect(RD.remoteData.traverse(O.option)(RD.success(1), a => O.some(a + 1))).toStrictEqual(O.some(RD.success(2)));
+    expect(RD.remoteData.bimap(RD.success(1), identity, a => a + 1)).toStrictEqual(RD.success(2));
+    expect(RD.remoteData.mapLeft(RD.failure(1), a => a + 1)).toStrictEqual(RD.failure(2));
+    expect(RD.remoteData.alt(RD.failure('error'), () => RD.success(2))).toStrictEqual(RD.success(2));
+    expect(RD.remoteData.extend(RD.success(1), () => 2)).toStrictEqual(RD.success(2));
   });
 });
