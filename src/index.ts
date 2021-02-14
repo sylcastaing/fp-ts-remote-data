@@ -81,11 +81,8 @@ export function toUndefined<E, A>(ma: RemoteData<E, A>): A | undefined {
   return isSuccess(ma) ? ma.success : undefined;
 }
 
-export function toEither<E, A>(ma: RemoteData<E, A>, onLoading: () => E): Either<E, A> {
-  return pipe(
-    ma,
-    fold<E, A, Either<E, A>>(() => left(onLoading()), right, left),
-  );
+export function toEither<E>(onLoading: () => E): <A>(ma: RemoteData<E, A>) => Either<E, A> {
+  return fold(() => left(onLoading()), right, left);
 }
 
 export const filterOrElse: {
