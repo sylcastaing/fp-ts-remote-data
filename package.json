@@ -35,7 +35,9 @@
     "postinstall": "husky install",
     "prepublishOnly": "pinst --disable",
     "postpublish": "pinst --enable",
-    "docs": "docs-ts --module=CommonJs"
+    "docs": "docs-ts",
+    "version": "tsdx build && docs-ts",
+    "release": "np"
   },
   "peerDependencies": {
     "fp-ts": "^2.9.0"
@@ -45,6 +47,7 @@
     "docs-ts": "0.6.2",
     "fp-ts": "^2.9.0",
     "husky": "5.0.9",
+    "np": "7.4.0",
     "pinst": "2.1.4",
     "size-limit": "4.9.2",
     "tsdx": "0.14.1",
