@@ -216,10 +216,20 @@ export function toEither<E>(onLoading: () => E): <A>(ma: RemoteData<E, A>) => Ei
   return fold(() => left(onLoading()), right, left);
 }
 
+/**
+ * @category destructors
+ * @since 2.0.0
+ * @param ma
+ */
 export function getSuccess<E, A>(ma: RemoteData<E, A>): Option<A> {
   return isSuccess(ma) ? some(ma.success) : none;
 }
 
+/**
+ * @category destructors
+ * @since 2.0.0
+ * @param ma
+ */
 export function getFailure<E, A>(ma: RemoteData<E, A>): Option<E> {
   return isFailure(ma) ? some(ma.failure) : none;
 }

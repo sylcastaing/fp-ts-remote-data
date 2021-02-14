@@ -2,6 +2,7 @@
   "version": "0.1.0",
   "name": "fp-ts-remote-data",
   "description": "Remote data type for fp-ts",
+  "homepage": "https://github.com/sylcastaing/fp-ts-remote-data",
   "keywords": [
     "fp",
     "fp-ts",
@@ -33,20 +34,22 @@
     "analyze": "size-limit --why",
     "postinstall": "husky install",
     "prepublishOnly": "pinst --disable",
-    "postpublish": "pinst --enable"
+    "postpublish": "pinst --enable",
+    "docs": "docs-ts"
   },
   "peerDependencies": {
     "fp-ts": "^2.9.0"
   },
   "devDependencies": {
     "@size-limit/preset-small-lib": "4.9.2",
+    "docs-ts": "0.6.2",
+    "fp-ts": "^2.9.0",
     "husky": "5.0.9",
     "pinst": "2.1.4",
     "size-limit": "4.9.2",
     "tsdx": "0.14.1",
     "tslib": "2.1.0",
-    "typescript": "4.1.5",
-    "fp-ts": "^2.9.0"
+    "typescript": "4.1.5"
   },
   "size-limit": [
     {
