@@ -26,3 +26,4 @@ yarn add fp-ts-remote-data
 
 # Documentation
 
+Documentation available on [GitHub Pages](https://sylcastaing.github.io/fp-ts-remote-data/)

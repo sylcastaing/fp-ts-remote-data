@@ -35,7 +35,7 @@
     "postinstall": "husky install",
     "prepublishOnly": "pinst --disable",
     "postpublish": "pinst --enable",
-    "docs": "docs-ts"
+    "docs": "docs-ts --module=CommonJs"
   },
   "peerDependencies": {
     "fp-ts": "^2.9.0"

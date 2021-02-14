@@ -10,7 +10,7 @@ parent: Modules
 type RemoteData<E, A> = Loading | Failure<E> | Success<A>
 ```
 
-Represents and async value of one of two possible types (a disjoint union). Value can also be empty with Loading value.
+Represents and async value of one of two possible types (a disjoint union). Value can also be empty with `Loading` value.
 
 An instance of `RemoteData` is either an instance of `Loading`, `Failure` or `Success`.
 
@@ -650,6 +650,16 @@ Returns `true` if the RemoteData is an instance of `Failure`, `false` otherwise.
 export declare const isFailure: <E, A>(ma: RemoteData<E, A>) => ma is Failure<E>
 ```
 
+**Example**
+
+```ts
+import * as RD from 'fp-ts-remote-data'
+
+RD.isSuccess(RD.success(1)) // false
+RD.isSuccess(RD.failure(1)) // true
+RD.isSuccess(RD.loading) // false
+```
+
 Added in v2.0.0
 
 ## isLoading
@@ -662,6 +672,16 @@ Returns `true` if the RemoteData is an instance of `Loading`, `false` otherwise.
 export declare const isLoading: <E, A>(ma: RemoteData<E, A>) => ma is Loading
 ```
 
+**Example**
+
+```ts
+import * as RD from 'fp-ts-remote-data'
+
+RD.isLoading(RD.success(1)) // false
+RD.isLoading(RD.failure(1)) // false
+RD.isLoading(RD.loading) // true
+```
+
 Added in v2.0.0
 
 ## isSuccess
@@ -672,6 +692,16 @@ Returns `true` if the RemoteData is an instance of `Success`, `false` otherwise.
 
 ```ts
 export declare const isSuccess: <E, A>(ma: RemoteData<E, A>) => ma is Success<A>
+```
+
+**Example**
+
+```ts
+import * as RD from 'fp-ts-remote-data'
+
+RD.isSuccess(RD.success(1)) // true
+RD.isSuccess(RD.failure(1)) // false
+RD.isSuccess(RD.loading) // false
 ```
 
 Added in v2.0.0
