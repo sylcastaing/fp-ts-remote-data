@@ -458,6 +458,23 @@ export const chainFirst: <E, A, B>(
 /**
  * @category combinators
  * @since 2.0.0
+ * @param f
+ */
+export const chainEitherW = <D, A, B>(f: (a: A) => Either<D, B>) => <E>(ma: RemoteData<E, A>): RemoteData<D | E, B> =>
+  isSuccess(ma) ? fromEither(f(ma.success)) : ma;
+
+/**
+ * @category combinators
+ * @since 2.0.0
+ * @param f
+ */
+export const chainEither: <E, A, B>(
+  f: (a: A) => Either<E, B>,
+) => (ma: RemoteData<E, A>) => RemoteData<E, B> = chainEitherW;
+
+/**
+ * @category combinators
+ * @since 2.0.0
  */
 export const flatten: <E, A>(mma: RemoteData<E, RemoteData<E, A>>) => RemoteData<E, A> =
   /*#__PURE__*/

@@ -242,6 +242,36 @@ describe('RemoteData', () => {
       assert.deepStrictEqual(pipe(RD.failure<string, string>('maError'), RD.chainFirstW(f)), RD.failure('maError'));
     });
 
+    it('chainEither', () => {
+      expect(
+        pipe(
+          RD.success(1),
+          RD.chainEither(a => EI.right(a + 1)),
+        ),
+      ).toStrictEqual(RD.success(2));
+
+      expect(
+        pipe(
+          RD.success(1),
+          RD.chainEither(a => EI.left(a + 1)),
+        ),
+      ).toStrictEqual(RD.failure(2));
+
+      expect(
+        pipe(
+          RD.failure('error'),
+          RD.chainEither(a => EI.right(a + 1)),
+        ),
+      ).toStrictEqual(RD.failure('error'));
+
+      expect(
+        pipe(
+          RD.loading,
+          RD.chainEither(a => EI.right(a + 1)),
+        ),
+      ).toStrictEqual(RD.loading);
+    });
+
     it('alt', () => {
       const f = () => RD.success<string, number>(10);
       const f2 = () => RD.failure<string, number>('error2');
