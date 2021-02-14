@@ -9,21 +9,21 @@ import assert from 'assert';
 describe('RemoteData', () => {
   describe('guards', () => {
     it('isSuccess', () => {
-      expect(RD.isSuccess(RD.success(1))).toStrictEqual(true);
-      expect(RD.isSuccess(RD.failure(1))).toStrictEqual(false);
-      expect(RD.isSuccess(RD.loading)).toStrictEqual(false);
+      expect(RD.isSuccess(RD.success(1))).toBeTruthy();
+      expect(RD.isSuccess(RD.failure(1))).toBeFalsy();
+      expect(RD.isSuccess(RD.loading)).toBeFalsy();
     });
 
     it('isFailure', () => {
-      expect(RD.isFailure(RD.success(1))).toStrictEqual(false);
-      expect(RD.isFailure(RD.failure(1))).toStrictEqual(true);
-      expect(RD.isFailure(RD.loading)).toStrictEqual(false);
+      expect(RD.isFailure(RD.success(1))).toBeFalsy();
+      expect(RD.isFailure(RD.failure(1))).toBeTruthy();
+      expect(RD.isFailure(RD.loading)).toBeFalsy();
     });
 
     it('isLoading', () => {
-      expect(RD.isLoading(RD.success(1))).toStrictEqual(false);
-      expect(RD.isLoading(RD.failure(1))).toStrictEqual(false);
-      expect(RD.isLoading(RD.loading)).toStrictEqual(true);
+      expect(RD.isLoading(RD.success(1))).toBeFalsy();
+      expect(RD.isLoading(RD.failure(1))).toBeFalsy();
+      expect(RD.isLoading(RD.loading)).toBeTruthy();
     });
   });
 
@@ -193,6 +193,7 @@ describe('RemoteData', () => {
     it('of', () => {
       expect(RD.of(1)).toStrictEqual(RD.success(1));
     });
+
     it('chain', () => {
       expect(
         pipe(

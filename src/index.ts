@@ -3,7 +3,7 @@
  * type RemoteData<E, A> = Loading | Failure<E> | Success<A>
  * ```
  *
- * Represents and async value of one of two possible types (a disjoint union). Value can also be empty with Loading value.
+ * Represents and async value of one of two possible types (a disjoint union). Value can also be empty with `Loading` value.
  *
  * An instance of `RemoteData` is either an instance of `Loading`, `Failure` or `Success`.
  *
@@ -70,6 +70,13 @@ export type RemoteData<E, A> = Loading | Success<A> | Failure<E>;
 /**
  * Returns `true` if the RemoteData is an instance of `Loading`, `false` otherwise.
  *
+ * @example
+ * import * as RD from 'fp-ts-remote-data'
+ *
+ * RD.isLoading(RD.success(1)) // false
+ * RD.isLoading(RD.failure(1)) // false
+ * RD.isLoading(RD.loading) // true
+ *
  * @category guards
  * @since 2.0.0
  * @param ma
@@ -79,6 +86,13 @@ export const isLoading = <E, A>(ma: RemoteData<E, A>): ma is Loading => ma._tag 
 /**
  * Returns `true` if the RemoteData is an instance of `Success`, `false` otherwise.
  *
+ * @example
+ * import * as RD from 'fp-ts-remote-data'
+ *
+ * RD.isSuccess(RD.success(1)) // true
+ * RD.isSuccess(RD.failure(1)) // false
+ * RD.isSuccess(RD.loading) // false
+ *
  * @category guards
  * @since 2.0.0
  * @param ma
@@ -87,6 +101,13 @@ export const isSuccess = <E, A>(ma: RemoteData<E, A>): ma is Success<A> => ma._t
 
 /**
  * Returns `true` if the RemoteData is an instance of `Failure`, `false` otherwise.
+ *
+ * @example
+ * import * as RD from 'fp-ts-remote-data'
+ *
+ * RD.isSuccess(RD.success(1)) // false
+ * RD.isSuccess(RD.failure(1)) // true
+ * RD.isSuccess(RD.loading) // false
  *
  * @category guards
  * @since 2.0.0
@@ -216,10 +237,20 @@ export function toEither<E>(onLoading: () => E): <A>(ma: RemoteData<E, A>) => Ei
   return fold(() => left(onLoading()), right, left);
 }
 
+/**
+ * @category destructors
+ * @since 2.0.0
+ * @param ma
+ */
 export function getSuccess<E, A>(ma: RemoteData<E, A>): Option<A> {
   return isSuccess(ma) ? some(ma.success) : none;
 }
 
+/**
+ * @category destructors
+ * @since 2.0.0
+ * @param ma
+ */
 export function getFailure<E, A>(ma: RemoteData<E, A>): Option<E> {
   return isFailure(ma) ? some(ma.failure) : none;
 }
