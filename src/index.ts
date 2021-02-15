@@ -75,7 +75,7 @@ export type RemoteData<E, A> = Pending | Success<A> | Failure<E>;
  *
  * RD.isPending(RD.success(1)) // false
  * RD.isPending(RD.failure(1)) // false
- * RD.isPending(RD.isPending) // true
+ * RD.isPending(RD.pending) // true
  *
  * @category guards
  * @since 2.0.0
