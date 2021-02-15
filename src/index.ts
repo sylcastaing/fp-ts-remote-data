@@ -299,9 +299,18 @@ export function swap<E, A>(ma: RemoteData<E, A>): RemoteData<A, E> {
  * @since 2.0.0
  * @param onFailure
  */
-export function orElse<E, A, M>(onFailure: (e: E) => RemoteData<M, A>): (ma: RemoteData<E, A>) => RemoteData<M, A> {
-  return ma => (isFailure(ma) ? onFailure(ma.failure) : ma);
-}
+export const orElseW = <E, A, M, B>(
+  onFailure: (e: E) => RemoteData<M, B>,
+): ((ma: RemoteData<E, A>) => RemoteData<M, A | B>) => ma => (isFailure(ma) ? onFailure(ma.failure) : ma);
+
+/**
+ * @category combinators
+ * @since 2.0.0
+ * @param onFailure
+ */
+export const orElse: <E, A, M>(
+  onFailure: (e: E) => RemoteData<M, A>,
+) => (ma: RemoteData<E, A>) => RemoteData<M, A> = orElseW;
 
 /**
  * @category combinators
