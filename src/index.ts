@@ -1,13 +1,13 @@
 /**
  * ```ts
- * type RemoteData<E, A> = Loading | Failure<E> | Success<A>
+ * type RemoteData<E, A> = Pending | Failure<E> | Success<A>
  * ```
  *
- * Represents and async value of one of two possible types (a disjoint union). Value can also be empty with `Loading` value.
+ * Represents and async value of one of two possible types (a disjoint union). Value can also be empty with `Pending` value.
  *
- * An instance of `RemoteData` is either an instance of `Loading`, `Failure` or `Success`.
+ * An instance of `RemoteData` is either an instance of `Pending`, `Failure` or `Success`.
  *
- * A common use of `RemoteData` is as an alternative to `Either` for dealing with possible missing values on loading.
+ * A common use of `RemoteData` is as an alternative to `Either` for dealing with possible missing values on pending.
  *
  * @since 2.0.0
  */
@@ -35,8 +35,8 @@ import { Eq } from 'fp-ts/Eq';
  * @category model
  * @since 2.0.0
  */
-export interface Loading {
-  readonly _tag: 'Loading';
+export interface Pending {
+  readonly _tag: 'Pending';
 }
 
 /**
@@ -61,27 +61,27 @@ export interface Failure<E> {
  * @category model
  * @since 2.0.0
  */
-export type RemoteData<E, A> = Loading | Success<A> | Failure<E>;
+export type RemoteData<E, A> = Pending | Success<A> | Failure<E>;
 
 // -------------------------------------------------------------------------------------
 // guards
 // -------------------------------------------------------------------------------------
 
 /**
- * Returns `true` if the RemoteData is an instance of `Loading`, `false` otherwise.
+ * Returns `true` if the RemoteData is an instance of `Pending`, `false` otherwise.
  *
  * @example
  * import * as RD from 'fp-ts-remote-data'
  *
- * RD.isLoading(RD.success(1)) // false
- * RD.isLoading(RD.failure(1)) // false
- * RD.isLoading(RD.loading) // true
+ * RD.isPending(RD.success(1)) // false
+ * RD.isPending(RD.failure(1)) // false
+ * RD.isPending(RD.isPending) // true
  *
  * @category guards
  * @since 2.0.0
  * @param ma
  */
-export const isLoading = <E, A>(ma: RemoteData<E, A>): ma is Loading => ma._tag === 'Loading';
+export const isPending = <E, A>(ma: RemoteData<E, A>): ma is Pending => ma._tag === 'Pending';
 
 /**
  * Returns `true` if the RemoteData is an instance of `Success`, `false` otherwise.
@@ -91,7 +91,7 @@ export const isLoading = <E, A>(ma: RemoteData<E, A>): ma is Loading => ma._tag 
  *
  * RD.isSuccess(RD.success(1)) // true
  * RD.isSuccess(RD.failure(1)) // false
- * RD.isSuccess(RD.loading) // false
+ * RD.isSuccess(RD.pending) // false
  *
  * @category guards
  * @since 2.0.0
@@ -107,7 +107,7 @@ export const isSuccess = <E, A>(ma: RemoteData<E, A>): ma is Success<A> => ma._t
  *
  * RD.isSuccess(RD.success(1)) // false
  * RD.isSuccess(RD.failure(1)) // true
- * RD.isSuccess(RD.loading) // false
+ * RD.isSuccess(RD.pending) // false
  *
  * @category guards
  * @since 2.0.0
@@ -120,12 +120,12 @@ export const isFailure = <E, A>(ma: RemoteData<E, A>): ma is Failure<E> => ma._t
 // -------------------------------------------------------------------------------------
 
 /**
- * Get a `RemoteData` with a loading state
+ * Get a `RemoteData` with a pending state
  *
  * @category constructors
  * @since 2.0.0
  */
-export const loading: RemoteData<never, never> = { _tag: 'Loading' };
+export const pending: RemoteData<never, never> = { _tag: 'Pending' };
 
 /**
  * Constructs a new `RemoteData` holding a `Success` value.
@@ -198,16 +198,16 @@ export const fromPredicate: {
 /**
  * @category destructors
  * @since 2.0.0
- * @param onLoading
+ * @param onPending
  * @param onSuccess
  * @param onFailure
  */
 export function fold<E, A, B>(
-  onLoading: () => B,
+  onPending: () => B,
   onSuccess: (a: A) => B,
   onFailure: (e: E) => B,
 ): (ma: RemoteData<E, A>) => B {
-  return ma => (isLoading(ma) ? onLoading() : isSuccess(ma) ? onSuccess(ma.success) : onFailure(ma.failure));
+  return ma => (isPending(ma) ? onPending() : isSuccess(ma) ? onSuccess(ma.success) : onFailure(ma.failure));
 }
 
 /**
@@ -231,10 +231,10 @@ export function toUndefined<E, A>(ma: RemoteData<E, A>): A | undefined {
 /**
  * @category destructors
  * @since 2.0.0
- * @param onLoading
+ * @param onPending
  */
-export function toEither<E>(onLoading: () => E): <A>(ma: RemoteData<E, A>) => Either<E, A> {
-  return fold(() => left(onLoading()), right, left);
+export function toEither<E>(onPending: () => E): <A>(ma: RemoteData<E, A>) => Either<E, A> {
+  return fold(() => left(onPending()), right, left);
 }
 
 /**
