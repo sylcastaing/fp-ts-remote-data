@@ -7,14 +7,14 @@ parent: Modules
 ## index overview
 
 ```ts
-type RemoteData<E, A> = Loading | Failure<E> | Success<A>
+type RemoteData<E, A> = Pending | Failure<E> | Success<A>
 ```
 
-Represents and async value of one of two possible types (a disjoint union). Value can also be empty with `Loading` value.
+Represents and async value of one of two possible types (a disjoint union). Value can also be empty with `Pending` value.
 
-An instance of `RemoteData` is either an instance of `Loading`, `Failure` or `Success`.
+An instance of `RemoteData` is either an instance of `Pending`, `Failure` or `Success`.
 
-A common use of `RemoteData` is as an alternative to `Either` for dealing with possible missing values on loading.
+A common use of `RemoteData` is as an alternative to `Either` for dealing with possible missing values on pending.
 
 Added in v2.0.0
 
@@ -63,6 +63,7 @@ Added in v2.0.0
   - [flatten](#flatten)
   - [fromNullableK](#fromnullablek)
   - [orElse](#orelse)
+  - [orElseW](#orelsew)
   - [swap](#swap)
 - [constructors](#constructors)
   - [failure](#failure)
@@ -70,7 +71,7 @@ Added in v2.0.0
   - [fromNullable](#fromnullable)
   - [fromOption](#fromoption)
   - [fromPredicate](#frompredicate)
-  - [loading](#loading)
+  - [pending](#pending)
   - [success](#success)
 - [destructors](#destructors)
   - [fold](#fold)
@@ -81,7 +82,7 @@ Added in v2.0.0
   - [toUndefined](#toundefined)
 - [guards](#guards)
   - [isFailure](#isfailure)
-  - [isLoading](#isloading)
+  - [isPending](#ispending)
   - [isSuccess](#issuccess)
 - [instances](#instances)
   - [Alt](#alt-1)
@@ -98,7 +99,7 @@ Added in v2.0.0
   - [remoteData](#remotedata)
 - [model](#model)
   - [Failure (interface)](#failure-interface)
-  - [Loading (interface)](#loading-interface)
+  - [Pending (interface)](#pending-interface)
   - [RemoteData (type alias)](#remotedata-type-alias)
   - [Success (interface)](#success-interface)
 - [utils](#utils)
@@ -467,9 +468,21 @@ Added in v2.0.0
 **Signature**
 
 ```ts
-export declare function orElse<E, A, M>(
+export declare const orElse: <E, A, M>(
   onFailure: (e: E) => RemoteData<M, A>
-): (ma: RemoteData<E, A>) => RemoteData<M, A>
+) => (ma: RemoteData<E, A>) => RemoteData<M, A>
+```
+
+Added in v2.0.0
+
+## orElseW
+
+**Signature**
+
+```ts
+export declare const orElseW: <E, A, M, B>(
+  onFailure: (e: E) => RemoteData<M, B>
+) => (ma: RemoteData<E, A>) => RemoteData<M, A | B>
 ```
 
 Added in v2.0.0
@@ -548,14 +561,14 @@ export declare const fromPredicate: {
 
 Added in v2.0.0
 
-## loading
+## pending
 
-Get a `RemoteData` with a loading state
+Get a `RemoteData` with a pending state
 
 **Signature**
 
 ```ts
-export declare const loading: RemoteData<never, never>
+export declare const pending: RemoteData<never, never>
 ```
 
 Added in v2.0.0
@@ -580,7 +593,7 @@ Added in v2.0.0
 
 ```ts
 export declare function fold<E, A, B>(
-  onLoading: () => B,
+  onPending: () => B,
   onSuccess: (a: A) => B,
   onFailure: (e: E) => B
 ): (ma: RemoteData<E, A>) => B
@@ -613,7 +626,7 @@ Added in v2.0.0
 **Signature**
 
 ```ts
-export declare function toEither<E>(onLoading: () => E): <A>(ma: RemoteData<E, A>) => Either<E, A>
+export declare function toEither<E>(onPending: () => E): <A>(ma: RemoteData<E, A>) => Either<E, A>
 ```
 
 Added in v2.0.0
@@ -657,19 +670,19 @@ import * as RD from 'fp-ts-remote-data'
 
 RD.isSuccess(RD.success(1)) // false
 RD.isSuccess(RD.failure(1)) // true
-RD.isSuccess(RD.loading) // false
+RD.isSuccess(RD.pending) // false
 ```
 
 Added in v2.0.0
 
-## isLoading
+## isPending
 
-Returns `true` if the RemoteData is an instance of `Loading`, `false` otherwise.
+Returns `true` if the RemoteData is an instance of `Pending`, `false` otherwise.
 
 **Signature**
 
 ```ts
-export declare const isLoading: <E, A>(ma: RemoteData<E, A>) => ma is Loading
+export declare const isPending: <E, A>(ma: RemoteData<E, A>) => ma is Pending
 ```
 
 **Example**
@@ -677,9 +690,9 @@ export declare const isLoading: <E, A>(ma: RemoteData<E, A>) => ma is Loading
 ```ts
 import * as RD from 'fp-ts-remote-data'
 
-RD.isLoading(RD.success(1)) // false
-RD.isLoading(RD.failure(1)) // false
-RD.isLoading(RD.loading) // true
+RD.isPending(RD.success(1)) // false
+RD.isPending(RD.failure(1)) // false
+RD.isPending(RD.pending) // true
 ```
 
 Added in v2.0.0
@@ -701,7 +714,7 @@ import * as RD from 'fp-ts-remote-data'
 
 RD.isSuccess(RD.success(1)) // true
 RD.isSuccess(RD.failure(1)) // false
-RD.isSuccess(RD.loading) // false
+RD.isSuccess(RD.pending) // false
 ```
 
 Added in v2.0.0
@@ -849,13 +862,13 @@ export interface Failure<E> {
 
 Added in v2.0.0
 
-## Loading (interface)
+## Pending (interface)
 
 **Signature**
 
 ```ts
-export interface Loading {
-  readonly _tag: 'Loading'
+export interface Pending {
+  readonly _tag: 'Pending'
 }
 ```
 
@@ -866,7 +879,7 @@ Added in v2.0.0
 **Signature**
 
 ```ts
-export type RemoteData<E, A> = Loading | Success<A> | Failure<E>
+export type RemoteData<E, A> = Pending | Success<A> | Failure<E>
 ```
 
 Added in v2.0.0
