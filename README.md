@@ -18,6 +18,8 @@ npm i fp-ts-remote-data
 yarn add fp-ts-remote-data
 ```
 
+`fp-ts-remote-data` versions follow `fp-ts` major versions. 
+
 **Peer Dependencies**
 
 | Library | Version  |
