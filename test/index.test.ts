@@ -1,11 +1,42 @@
 import * as RD from '../src';
 import * as EI from 'fp-ts/Either';
 import * as O from 'fp-ts/Option';
-import { pipe, identity, Predicate } from 'fp-ts/function';
+import * as Number from 'fp-ts/number';
+import * as Boolean from 'fp-ts/boolean';
+import { identity, pipe } from 'fp-ts/function';
 import { monoidString } from 'fp-ts/Monoid';
-import { eqNumber } from 'fp-ts/Eq';
+import { Predicate } from 'fp-ts/Predicate';
 
 describe('RemoteData', () => {
+  describe('instances', () => {
+    it('getShow', () => {
+      const show = RD.getShow(Boolean.Show, Number.Show);
+
+      expect(show.show(RD.pending)).toStrictEqual('pending');
+      expect(show.show(RD.success(12))).toStrictEqual('success(12)');
+      expect(show.show(RD.failure(false))).toStrictEqual('failure(false)');
+    });
+
+    it('getEq', () => {
+      const eq = RD.getEq(Boolean.Eq, Number.Eq);
+
+      const rd = RD.success(7);
+
+      expect(eq.equals(rd, rd)).toBeTruthy();
+
+      expect(eq.equals(RD.pending, RD.pending)).toBeTruthy();
+      expect(eq.equals(RD.pending, RD.success(1))).toBeFalsy();
+      expect(eq.equals(RD.pending, RD.failure(false))).toBeFalsy();
+
+      expect(eq.equals(RD.success(1), RD.success(1))).toBeTruthy();
+      expect(eq.equals(RD.success(1), RD.success(2))).toBeFalsy();
+      expect(eq.equals(RD.success(1), RD.failure(true))).toBeFalsy();
+
+      expect(eq.equals(RD.failure(false), RD.failure(false))).toBeTruthy();
+      expect(eq.equals(RD.failure(false), RD.failure(true))).toBeFalsy();
+    });
+  });
+
   describe('guards', () => {
     it('isSuccess', () => {
       expect(RD.isSuccess(RD.success(1))).toBeTruthy();
@@ -28,7 +59,7 @@ describe('RemoteData', () => {
 
   describe('constructors', () => {
     it('fromNullable', () => {
-      const fromNullable = RD.fromNullable(() => 'null');
+      const fromNullable = RD.fromNullable('null');
 
       expect(fromNullable(1)).toStrictEqual(RD.success(1));
       expect(fromNullable(null)).toStrictEqual(RD.failure('null'));
@@ -102,14 +133,14 @@ describe('RemoteData', () => {
 
   describe('combinators', () => {
     it('fromNullableK', () => {
-      const f = RD.fromNullableK(() => 'error')((n: number) => (n > 0 ? n : null));
+      const f = RD.fromNullableK('error')((n: number) => (n > 0 ? n : null));
 
       expect(f(1)).toStrictEqual(RD.success(1));
       expect(f(-1)).toStrictEqual(RD.failure('error'));
     });
 
     it('chainNullableK', () => {
-      const f = RD.chainNullableK(() => 'error')((n: number) => (n > 0 ? n : null));
+      const f = RD.chainNullableK('error')((n: number) => (n > 0 ? n : null));
 
       expect(f(RD.success(1))).toStrictEqual(RD.success(1));
       expect(f(RD.success(-1))).toStrictEqual(RD.failure('error'));
@@ -365,17 +396,59 @@ describe('RemoteData', () => {
     });
   });
 
+  describe('interop', () => {
+    it('tryCatch', () => {
+      expect(RD.tryCatch(() => 1, identity)).toStrictEqual(RD.success(1));
+      expect(
+        RD.tryCatch(() => {
+          throw new Error('Ooops');
+        }, identity),
+      ).toStrictEqual(RD.failure(new Error('Ooops')));
+    });
+
+    it('tryCatchK', () => {
+      const f = RD.tryCatchK((n: number) => {
+        if (n > 0) {
+          return n;
+        } else {
+          throw new Error('negative');
+        }
+      }, identity);
+
+      expect(f(2)).toStrictEqual(RD.success(2));
+      expect(f(-2)).toStrictEqual(RD.failure(new Error('negative')));
+    });
+  });
+
+  describe('do', () => {
+    expect(
+      pipe(
+        RD.Do,
+        RD.bind('firstName', () => RD.success('Pierre')),
+        RD.bind('age', ({ firstName }) => RD.success(firstName.length)),
+      ),
+    ).toStrictEqual(RD.success({ firstName: 'Pierre', age: 6 }));
+
+    expect(
+      pipe(
+        RD.Do,
+        RD.bind('firstName', () => RD.success('Pierre')),
+        RD.bind('age', ({ firstName }) => RD.failure(firstName.length < 10)),
+      ),
+    ).toStrictEqual(RD.failure(true));
+  });
+
   describe('utils', () => {
     it('elem', () => {
-      expect(RD.elem(eqNumber)(2)(RD.success(2))).toBeTruthy();
-      expect(RD.elem(eqNumber)(3)(RD.success(2))).toBeFalsy();
-      expect(RD.elem(eqNumber)(3)(RD.failure('error'))).toBeFalsy();
-      expect(RD.elem(eqNumber)(3)(RD.pending)).toBeFalsy();
+      expect(RD.elem(Number.Eq)(2)(RD.success(2))).toBeTruthy();
+      expect(RD.elem(Number.Eq)(3)(RD.success(2))).toBeFalsy();
+      expect(RD.elem(Number.Eq)(3)(RD.failure('error'))).toBeFalsy();
+      expect(RD.elem(Number.Eq)(3)(RD.pending)).toBeFalsy();
 
-      expect(RD.elem(eqNumber)(2, RD.success(2))).toBeTruthy();
-      expect(RD.elem(eqNumber)(3, RD.success(2))).toBeFalsy();
-      expect(RD.elem(eqNumber)(3, RD.failure('error'))).toBeFalsy();
-      expect(RD.elem(eqNumber)(3, RD.pending)).toBeFalsy();
+      expect(RD.elem(Number.Eq)(2, RD.success(2))).toBeTruthy();
+      expect(RD.elem(Number.Eq)(3, RD.success(2))).toBeFalsy();
+      expect(RD.elem(Number.Eq)(3, RD.failure('error'))).toBeFalsy();
+      expect(RD.elem(Number.Eq)(3, RD.pending)).toBeFalsy();
     });
 
     it('exists', () => {
