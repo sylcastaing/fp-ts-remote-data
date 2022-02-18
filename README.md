@@ -22,9 +22,9 @@ yarn add fp-ts-remote-data
 
 **Peer Dependencies**
 
-| Library | Version  |
-| ------- | -------- |
-| fp-ts   | `^2.9.0` |
+| Library | Version   |
+| ------- |-----------|
+| fp-ts   | `^2.11.0` |
 
 # Documentation
 

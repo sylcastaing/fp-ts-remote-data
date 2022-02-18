@@ -28,7 +28,12 @@ import { bindTo as bindTo_, flap as flap_, Functor2 } from 'fp-ts/Functor';
 import { Eq } from 'fp-ts/Eq';
 import { Show } from 'fp-ts/Show';
 import { Pointed2 } from 'fp-ts/Pointed';
-import { apFirst as apFirst_, Apply2, apS as apS_, apSecond as apSecond_ } from 'fp-ts/Apply';
+import {
+  apFirst as apFirst_,
+  Apply2,
+  apS as apS_,
+  apSecond as apSecond_,
+} from 'fp-ts/Apply';
 import { bind as bind_, Chain2, chainFirst as chainFirst_ } from 'fp-ts/Chain';
 import {
   chainEitherK as chainEitherK_,
@@ -98,7 +103,10 @@ export const pending: RemoteData<never, never> = { _tag: 'Pending' };
  * @since 2.0.0
  * @param a
  */
-export const success = <E = never, A = never>(a: A): RemoteData<E, A> => ({ _tag: 'Success', success: a });
+export const success = <E = never, A = never>(a: A): RemoteData<E, A> => ({
+  _tag: 'Success',
+  success: a,
+});
 
 /**
  * Constructs a new `RemoteData` holding an `Failure` value.
@@ -107,7 +115,10 @@ export const success = <E = never, A = never>(a: A): RemoteData<E, A> => ({ _tag
  * @since 2.0.0
  * @param e
  */
-export const failure = <E = never, A = never>(e: E): RemoteData<E, A> => ({ _tag: 'Failure', failure: e });
+export const failure = <E = never, A = never>(e: E): RemoteData<E, A> => ({
+  _tag: 'Failure',
+  failure: e,
+});
 
 // -------------------------------------------------------------------------------------
 // non-pipeables
@@ -117,15 +128,19 @@ const _map: Monad2<URI>['map'] = (fa, f) => pipe(fa, map(f));
 const _ap: Monad2<URI>['ap'] = (fab, fa) => pipe(fab, ap(fa));
 const _chain: Monad2<URI>['chain'] = (ma, f) => pipe(ma, chain(f));
 const _reduce: Foldable2<URI>['reduce'] = (fa, b, f) => pipe(fa, reduce(b, f));
-const _foldMap: Foldable2<URI>['foldMap'] = M => (fa, f) => {
+const _foldMap: Foldable2<URI>['foldMap'] = (M) => (fa, f) => {
   const foldMapM = foldMap(M);
   return pipe(fa, foldMapM(f));
 };
-const _reduceRight: Foldable2<URI>['reduceRight'] = (fa, b, f) => pipe(fa, reduceRight(b, f));
+const _reduceRight: Foldable2<URI>['reduceRight'] = (fa, b, f) =>
+  pipe(fa, reduceRight(b, f));
 const _traverse = <F>(
-  F: ApplicativeHKT<F>,
-): (<E, A, B>(ta: RemoteData<E, A>, f: (a: A) => HKT<F, B>) => HKT<F, RemoteData<E, B>>) => {
-  const traverseF = traverse(F);
+  a: ApplicativeHKT<F>
+): (<E, A, B>(
+  ta: RemoteData<E, A>,
+  f: (a: A) => HKT<F, B>
+) => HKT<F, RemoteData<E, B>>) => {
+  const traverseF = traverse(a);
   return (ta, f) => pipe(ta, traverseF(f));
 };
 const _bimap: Bifunctor2<URI>['bimap'] = (fa, f, g) => pipe(fa, bimap(f, g));
@@ -143,11 +158,15 @@ const _extend: Extend2<URI>['extend'] = (wa, f) => pipe(wa, extend(f));
  */
 export const URI = 'RemoteData';
 
+/* eslint-disable */
+
 /**
  * @category instances
  * @since 2.0.0
  */
 export type URI = typeof URI;
+
+/* eslint-enable */
 
 declare module 'fp-ts/HKT' {
   interface URItoKind2<E, A> {
@@ -161,9 +180,16 @@ declare module 'fp-ts/HKT' {
  * @param SE
  * @param SA
  */
-export const getShow = <E, A>(SE: Show<E>, SA: Show<A>): Show<RemoteData<E, A>> => ({
-  show: ma =>
-    isPending(ma) ? 'pending' : isFailure(ma) ? `failure(${SE.show(ma.failure)})` : `success(${SA.show(ma.success)})`,
+export const getShow = <E, A>(
+  SE: Show<E>,
+  SA: Show<A>
+): Show<RemoteData<E, A>> => ({
+  show: (ma) =>
+    isPending(ma)
+      ? 'pending'
+      : isFailure(ma)
+      ? `failure(${SE.show(ma.failure)})`
+      : `success(${SA.show(ma.success)})`,
 });
 
 /**
@@ -185,7 +211,9 @@ export const getEq = <E, A>(EL: Eq<E>, EA: Eq<A>): Eq<RemoteData<E, A>> => ({
  * @since 2.0.0
  * @param f
  */
-export const map: <A, B>(f: (a: A) => B) => <E>(fa: RemoteData<E, A>) => RemoteData<E, B> = f => fa =>
+export const map: <A, B>(
+  f: (a: A) => B
+) => <E>(fa: RemoteData<E, A>) => RemoteData<E, B> = (f) => (fa) =>
   isSuccess(fa) ? success(f(fa.success)) : fa;
 
 /**
@@ -222,9 +250,14 @@ export const Pointed: Pointed2<URI> = {
  * @param fa
  */
 export const apW: <D, A>(
-  fa: RemoteData<D, A>,
-) => <E, B>(fab: RemoteData<E, (a: A) => B>) => RemoteData<D | E, B> = fa => fab =>
-  isSuccess(fab) ? (isSuccess(fa) ? success(fab.success(fa.success)) : fa) : fab;
+  fa: RemoteData<D, A>
+) => <E, B>(fab: RemoteData<E, (a: A) => B>) => RemoteData<D | E, B> =
+  (fa) => (fab) =>
+    isSuccess(fab)
+      ? isSuccess(fa)
+        ? success(fab.success(fa.success))
+        : fa
+      : fab;
 
 /**
  * Apply a function to an argument under a type constructor.
@@ -233,7 +266,9 @@ export const apW: <D, A>(
  * @since 2.0.0
  * @param fa
  */
-export const ap: <E, A>(fa: RemoteData<E, A>) => <B>(fab: RemoteData<E, (a: A) => B>) => RemoteData<E, B> = apW;
+export const ap: <E, A>(
+  fa: RemoteData<E, A>
+) => <B>(fab: RemoteData<E, (a: A) => B>) => RemoteData<E, B> = apW;
 
 /**
  * @category instances
@@ -263,8 +298,10 @@ export const Applicative: Applicative2<URI> = {
  * @since 2.0.0
  * @param f
  */
-export const chainW = <D, A, B>(f: (a: A) => RemoteData<D, B>) => <E>(ma: RemoteData<E, A>): RemoteData<D | E, B> =>
-  isSuccess(ma) ? f(ma.success) : ma;
+export const chainW =
+  <D, A, B>(f: (a: A) => RemoteData<D, B>) =>
+  <E>(ma: RemoteData<E, A>): RemoteData<D | E, B> =>
+    isSuccess(ma) ? f(ma.success) : ma;
 
 /**
  * Composes computations in sequence, using the return value of one computation to determine the next computation.
@@ -273,7 +310,9 @@ export const chainW = <D, A, B>(f: (a: A) => RemoteData<D, B>) => <E>(ma: Remote
  * @since 2.0.0
  * @param f
  */
-export const chain: <E, A, B>(f: (a: A) => RemoteData<E, B>) => (ma: RemoteData<E, A>) => RemoteData<E, B> = chainW;
+export const chain: <E, A, B>(
+  f: (a: A) => RemoteData<E, B>
+) => (ma: RemoteData<E, A>) => RemoteData<E, B> = chainW;
 
 /**
  * @category instances
@@ -304,7 +343,10 @@ export const Monad: Monad2<URI> = {
  * @param b
  * @param f
  */
-export const reduce: <A, B>(b: B, f: (b: B, a: A) => B) => <E>(fa: RemoteData<E, A>) => B = (b, f) => fa =>
+export const reduce: <A, B>(
+  b: B,
+  f: (b: B, a: A) => B
+) => <E>(fa: RemoteData<E, A>) => B = (b, f) => (fa) =>
   isSuccess(fa) ? f(b, fa.success) : b;
 
 /**
@@ -312,8 +354,11 @@ export const reduce: <A, B>(b: B, f: (b: B, a: A) => B) => <E>(fa: RemoteData<E,
  * @since 2.0.0
  * @param M
  */
-export const foldMap: <M>(M: Monoid<M>) => <A>(f: (a: A) => M) => <E>(fa: RemoteData<E, A>) => M = M => f => fa =>
-  isSuccess(fa) ? f(fa.success) : M.empty;
+export const foldMap: <M>(
+  M: Monoid<M>
+) => <A>(f: (a: A) => M) => <E>(fa: RemoteData<E, A>) => M =
+  (M) => (f) => (fa) =>
+    isSuccess(fa) ? f(fa.success) : M.empty;
 
 /**
  * @category instance operations
@@ -321,7 +366,10 @@ export const foldMap: <M>(M: Monoid<M>) => <A>(f: (a: A) => M) => <E>(fa: Remote
  * @param b
  * @param f
  */
-export const reduceRight: <A, B>(b: B, f: (a: A, b: B) => B) => <E>(fa: RemoteData<E, A>) => B = (b, f) => fa =>
+export const reduceRight: <A, B>(
+  b: B,
+  f: (a: A, b: B) => B
+) => <E>(fa: RemoteData<E, A>) => B = (b, f) => (fa) =>
   isSuccess(fa) ? f(fa.success, b) : b;
 
 /**
@@ -338,20 +386,23 @@ export const Foldable: Foldable2<URI> = {
 /**
  * @category instance operations
  * @since 2.0.0
- * @param F
+ * @param a
  */
-export const traverse: PipeableTraverse2<URI> = <F>(F: ApplicativeHKT<F>) => <A, B>(f: (a: A) => HKT<F, B>) => <E>(
-  ta: RemoteData<E, A>,
-): HKT<F, RemoteData<E, B>> => (isSuccess(ta) ? F.map(f(ta.success), success) : F.of(ta));
+export const traverse: PipeableTraverse2<URI> =
+  <F>(a: ApplicativeHKT<F>) =>
+  <A, B>(f: (a: A) => HKT<F, B>) =>
+  <E>(ta: RemoteData<E, A>): HKT<F, RemoteData<E, B>> =>
+    isSuccess(ta) ? a.map(f(ta.success), success) : a.of(ta);
 
 /**
  * @category instance operations
  * @since 2.0.0
- * @param F
+ * @param a
  */
-export const sequence: Traversable2<URI>['sequence'] = <F>(F: ApplicativeHKT<F>) => <E, A>(
-  ma: RemoteData<E, HKT<F, A>>,
-): HKT<F, RemoteData<E, A>> => (isSuccess(ma) ? F.map<A, RemoteData<E, A>>(ma.success, success) : F.of(ma));
+export const sequence: Traversable2<URI>['sequence'] =
+  <F>(a: ApplicativeHKT<F>) =>
+  <E, A>(ma: RemoteData<E, HKT<F, A>>): HKT<F, RemoteData<E, A>> =>
+    isSuccess(ma) ? a.map<A, RemoteData<E, A>>(ma.success, success) : a.of(ma);
 
 /**
  * @category instances
@@ -373,17 +424,24 @@ export const Traversable: Traversable2<URI> = {
  * @param f
  * @param g
  */
-export const bimap: <E, G, A, B>(f: (e: E) => G, g: (a: A) => B) => (fa: RemoteData<E, A>) => RemoteData<G, B> = (
-  f,
-  g,
-) => fa => (isSuccess(fa) ? success(g(fa.success)) : isFailure(fa) ? failure(f(fa.failure)) : fa);
+export const bimap: <E, G, A, B>(
+  f: (e: E) => G,
+  g: (a: A) => B
+) => (fa: RemoteData<E, A>) => RemoteData<G, B> = (f, g) => (fa) =>
+  isSuccess(fa)
+    ? success(g(fa.success))
+    : isFailure(fa)
+    ? failure(f(fa.failure))
+    : fa;
 
 /**
  * @category instance operations
  * @since 2.0.0
  * @param f
  */
-export const mapLeft: <E, G>(f: (e: E) => G) => <A>(fa: RemoteData<E, A>) => RemoteData<G, A> = f => fa =>
+export const mapLeft: <E, G>(
+  f: (e: E) => G
+) => <A>(fa: RemoteData<E, A>) => RemoteData<G, A> = (f) => (fa) =>
   isFailure(fa) ? failure(f(fa.failure)) : fa;
 
 /**
@@ -402,15 +460,19 @@ export const Bifunctor: Bifunctor2<URI> = {
  * @param that
  */
 export const altW: <E2, B>(
-  that: Lazy<RemoteData<E2, B>>,
-) => <E1, A>(fa: RemoteData<E1, A>) => RemoteData<E1 | E2, A | B> = that => fa => (isFailure(fa) ? that() : fa);
+  that: Lazy<RemoteData<E2, B>>
+) => <E1, A>(fa: RemoteData<E1, A>) => RemoteData<E1 | E2, A | B> =
+  (that) => (fa) =>
+    isFailure(fa) ? that() : fa;
 
 /**
  * @category instance operations
  * @since 2.0.0
  * @param that
  */
-export const alt: <E, A>(that: Lazy<RemoteData<E, A>>) => (fa: RemoteData<E, A>) => RemoteData<E, A> = altW;
+export const alt: <E, A>(
+  that: Lazy<RemoteData<E, A>>
+) => (fa: RemoteData<E, A>) => RemoteData<E, A> = altW;
 
 /**
  * @category instances
@@ -428,8 +490,9 @@ export const Alt: Alt2<URI> = {
  * @param f
  */
 export const extend: <E, A, B>(
-  f: (wa: RemoteData<E, A>) => B,
-) => (wa: RemoteData<E, A>) => RemoteData<E, B> = f => wa => (isSuccess(wa) ? success(f(wa)) : wa);
+  f: (wa: RemoteData<E, A>) => B
+) => (wa: RemoteData<E, A>) => RemoteData<E, B> = (f) => (wa) =>
+  isSuccess(wa) ? success(f(wa)) : wa;
 
 /**
  * @category instances
@@ -514,7 +577,8 @@ export const fromOption =
  * @since 2.0.0
  * @param ma
  */
-export const isPending = <E, A>(ma: RemoteData<E, A>): ma is Pending => ma._tag === 'Pending';
+export const isPending = <E, A>(ma: RemoteData<E, A>): ma is Pending =>
+  ma._tag === 'Pending';
 
 /**
  * Returns `true` if the RemoteData is an instance of `Success`, `false` otherwise.
@@ -530,7 +594,8 @@ export const isPending = <E, A>(ma: RemoteData<E, A>): ma is Pending => ma._tag 
  * @since 2.0.0
  * @param ma
  */
-export const isSuccess = <E, A>(ma: RemoteData<E, A>): ma is Success<A> => ma._tag === 'Success';
+export const isSuccess = <E, A>(ma: RemoteData<E, A>): ma is Success<A> =>
+  ma._tag === 'Success';
 
 /**
  * Returns `true` if the RemoteData is an instance of `Failure`, `false` otherwise.
@@ -546,7 +611,8 @@ export const isSuccess = <E, A>(ma: RemoteData<E, A>): ma is Success<A> => ma._t
  * @since 2.0.0
  * @param ma
  */
-export const isFailure = <E, A>(ma: RemoteData<E, A>): ma is Failure<E> => ma._tag === 'Failure';
+export const isFailure = <E, A>(ma: RemoteData<E, A>): ma is Failure<E> =>
+  ma._tag === 'Failure';
 
 // -------------------------------------------------------------------------------------
 // destructors
@@ -558,9 +624,18 @@ export const isFailure = <E, A>(ma: RemoteData<E, A>): ma is Failure<E> => ma._t
  * @category destructors
  * @since 2.11.0
  */
-export const matchW = <B, E, C, A, D>(onPending: () => B, onSuccess: (a: A) => D, onFailure: (E: E) => C) => (
-  ma: RemoteData<E, A>,
-): B | C | D => (isPending(ma) ? onPending() : isSuccess(ma) ? onSuccess(ma.success) : onFailure(ma.failure));
+export const matchW =
+  <B, E, C, A, D>(
+    onPending: () => B,
+    onSuccess: (a: A) => D,
+    onFailure: (E: E) => C
+  ) =>
+  (ma: RemoteData<E, A>): B | C | D =>
+    isPending(ma)
+      ? onPending()
+      : isSuccess(ma)
+      ? onSuccess(ma.success)
+      : onFailure(ma.failure);
 
 /**
  * Alias of [`matchW`](#matchw).
@@ -577,7 +652,7 @@ export const foldW = matchW;
 export const match: <E, A, B>(
   onPending: () => B,
   onSuccess: (a: A) => B,
-  onFailure: (e: E) => B,
+  onFailure: (e: E) => B
 ) => (ma: RemoteData<E, A>) => B = matchW;
 
 /**
@@ -589,7 +664,7 @@ export const match: <E, A, B>(
 export const fold: <E, A, B>(
   onPending: () => B,
   onSuccess: (a: A) => B,
-  onFailure: (e: E) => B,
+  onFailure: (e: E) => B
 ) => (ma: RemoteData<E, A>) => B = matchW;
 
 /**
@@ -615,7 +690,9 @@ export function toUndefined<E, A>(ma: RemoteData<E, A>): A | undefined {
  * @since 2.0.0
  * @param onPending
  */
-export function toEither<E>(onPending: () => E): <A>(ma: RemoteData<E, A>) => Either<E, A> {
+export function toEither<E>(
+  onPending: () => E
+): <A>(ma: RemoteData<E, A>) => Either<E, A> {
   return fold(() => left(onPending()), right, left);
 }
 
@@ -684,7 +761,9 @@ export const apSecond =
  * @category combinators
  * @since 2.0.0
  */
-export const chainFirst: <E, A, B>(f: (a: A) => RemoteData<E, B>) => (ma: RemoteData<E, A>) => RemoteData<E, A> =
+export const chainFirst: <E, A, B>(
+  f: (a: A) => RemoteData<E, B>
+) => (ma: RemoteData<E, A>) => RemoteData<E, A> =
   /*#__PURE__*/
   chainFirst_(Chain);
 
@@ -697,7 +776,7 @@ export const chainFirst: <E, A, B>(f: (a: A) => RemoteData<E, B>) => (ma: Remote
  * @since 2.0.0
  */
 export const chainFirstW: <E2, A, B>(
-  f: (a: A) => RemoteData<E2, B>,
+  f: (a: A) => RemoteData<E2, B>
 ) => <E1>(ma: RemoteData<E1, A>) => RemoteData<E1 | E2, A> = chainFirst as any;
 
 /**
@@ -706,7 +785,9 @@ export const chainFirstW: <E2, A, B>(
  * @category combinators
  * @since 2.11.0
  */
-export const flattenW: <E1, E2, A>(mma: RemoteData<E1, RemoteData<E2, A>>) => RemoteData<E1 | E2, A> =
+export const flattenW: <E1, E2, A>(
+  mma: RemoteData<E1, RemoteData<E2, A>>
+) => RemoteData<E1 | E2, A> =
   /*#__PURE__*/
   chainW(identity);
 
@@ -714,7 +795,9 @@ export const flattenW: <E1, E2, A>(mma: RemoteData<E1, RemoteData<E2, A>>) => Re
  * @category combinators
  * @since 2.0.0
  */
-export const flatten: <E, A>(mma: RemoteData<E, RemoteData<E, A>>) => RemoteData<E, A> = flattenW;
+export const flatten: <E, A>(
+  mma: RemoteData<E, RemoteData<E, A>>
+) => RemoteData<E, A> = flattenW;
 
 /**
  * Derivable from `Extend`.
@@ -722,7 +805,9 @@ export const flatten: <E, A>(mma: RemoteData<E, RemoteData<E, A>>) => RemoteData
  * @category combinators
  * @since 2.0.0
  */
-export const duplicate: <E, A>(ma: RemoteData<E, A>) => RemoteData<E, RemoteData<E, A>> =
+export const duplicate: <E, A>(
+  ma: RemoteData<E, A>
+) => RemoteData<E, RemoteData<E, A>> =
   /*#__PURE__*/
   extend(identity);
 
@@ -778,13 +863,17 @@ export const filterOrElse =
  * @since 2.0.0
  */
 export const filterOrElseW: {
-  <A, B extends A, E2>(refinement: Refinement<A, B>, onFalse: (a: A) => E2): <E1>(
-    ma: RemoteData<E1, A>,
+  <A, B extends A, E2>(refinement: Refinement<A, B>, onFalse: (a: A) => E2): <
+    E1
+  >(
+    ma: RemoteData<E1, A>
   ) => RemoteData<E1 | E2, B>;
   <A, E2>(predicate: Predicate<A>, onFalse: (a: A) => E2): <E1, B extends A>(
-    mb: RemoteData<E1, B>,
+    mb: RemoteData<E1, B>
   ) => RemoteData<E1 | E2, B>;
-  <A, E2>(predicate: Predicate<A>, onFalse: (a: A) => E2): <E1>(ma: RemoteData<E1, A>) => RemoteData<E1 | E2, A>;
+  <A, E2>(predicate: Predicate<A>, onFalse: (a: A) => E2): <E1>(
+    ma: RemoteData<E1, A>
+  ) => RemoteData<E1 | E2, A>;
 } = filterOrElse;
 
 /**
@@ -792,7 +881,11 @@ export const filterOrElseW: {
  * @since 2.0.0
  */
 export const swap = <E, A>(ma: RemoteData<E, A>): RemoteData<A, E> =>
-  isSuccess(ma) ? failure(ma.success) : isFailure(ma) ? success(ma.failure) : ma;
+  isSuccess(ma)
+    ? failure(ma.success)
+    : isFailure(ma)
+    ? success(ma.failure)
+    : ma;
 
 /**
  * Less strict version of [`orElse`](#orelse).
@@ -801,9 +894,12 @@ export const swap = <E, A>(ma: RemoteData<E, A>): RemoteData<A, E> =>
  * @since 2.0.0
  * @param onFailure
  */
-export const orElseW = <E, A, M, B>(
-  onFailure: (e: E) => RemoteData<M, B>,
-): ((ma: RemoteData<E, A>) => RemoteData<M, A | B>) => ma => (isFailure(ma) ? onFailure(ma.failure) : ma);
+export const orElseW =
+  <E, A, M, B>(
+    onFailure: (e: E) => RemoteData<M, B>
+  ): ((ma: RemoteData<E, A>) => RemoteData<M, A | B>) =>
+  (ma) =>
+    isFailure(ma) ? onFailure(ma.failure) : ma;
 
 /**
  * Useful for recovering from errors.
@@ -813,7 +909,7 @@ export const orElseW = <E, A, M, B>(
  * @param onFailure
  */
 export const orElse: <E, A, M>(
-  onFailure: (e: E) => RemoteData<M, A>,
+  onFailure: (e: E) => RemoteData<M, A>
 ) => (ma: RemoteData<E, A>) => RemoteData<M, A> = orElseW;
 
 // -------------------------------------------------------------------------------------
@@ -827,14 +923,19 @@ export const orElse: <E, A, M>(
  * @category interop
  * @since 2.0.0
  */
-export const fromNullable = <E>(e: E) => <A>(a: A): RemoteData<E, NonNullable<A>> =>
-  a == null ? failure(e) : success(a as NonNullable<A>);
+export const fromNullable =
+  <E>(e: E) =>
+  <A>(a: A): RemoteData<E, NonNullable<A>> =>
+    a == null ? failure(e) : success(a as NonNullable<A>);
 
 /**
  * @category interop
  * @since 2.11.0
  */
-export const tryCatch = <E, A>(f: Lazy<A>, onThrow: (e: unknown) => E): RemoteData<E, A> => {
+export const tryCatch = <E, A>(
+  f: Lazy<A>,
+  onThrow: (e: unknown) => E
+): RemoteData<E, A> => {
   try {
     return success(f());
   } catch (e) {
@@ -848,22 +949,25 @@ export const tryCatch = <E, A>(f: Lazy<A>, onThrow: (e: unknown) => E): RemoteDa
  * @category interop
  * @since 2.10.0
  */
-export const tryCatchK = <A extends ReadonlyArray<unknown>, B, E>(
-  f: (...a: A) => B,
-  onThrow: (error: unknown) => E,
-): ((...a: A) => RemoteData<E, B>) => (...a) => tryCatch(() => f(...a), onThrow);
+export const tryCatchK =
+  <A extends ReadonlyArray<unknown>, B, E>(
+    f: (...a: A) => B,
+    onThrow: (error: unknown) => E
+  ): ((...a: A) => RemoteData<E, B>) =>
+  (...a) =>
+    tryCatch(() => f(...a), onThrow);
 
 /**
  * @category interop
  * @since 2.0.0
  */
 export const fromNullableK = <E>(
-  e: E,
+  e: E
 ): (<A extends ReadonlyArray<unknown>, B>(
-  f: (...a: A) => B | null | undefined,
+  f: (...a: A) => B | null | undefined
 ) => (...a: A) => RemoteData<E, NonNullable<B>>) => {
   const from = fromNullable(e);
-  return f => flow(f, from);
+  return (f) => flow(f, from);
 };
 
 /**
@@ -872,10 +976,12 @@ export const fromNullableK = <E>(
  * @param e
  */
 export function chainNullableK<E>(
-  e: E,
-): <A, B>(f: (a: A) => B | null | undefined) => (ma: RemoteData<E, A>) => RemoteData<E, NonNullable<B>> {
+  e: E
+): <A, B>(
+  f: (a: A) => B | null | undefined
+) => (ma: RemoteData<E, A>) => RemoteData<E, NonNullable<B>> {
   const from = fromNullableK(e);
-  return f => chain(from(f));
+  return (f) => chain(from(f));
 }
 
 /**
@@ -895,9 +1001,7 @@ export const toUnion: <E, A>(fa: RemoteData<E, A>) => E | A | null =
  * @since 2.0.0
  * @param E
  */
-export function elem<A>(
-  E: Eq<A>,
-): {
+export function elem<A>(E: Eq<A>): {
   (a: A): <E>(ma: RemoteData<E, A>) => boolean;
   <E>(a: A, ma: RemoteData<E, A>): boolean;
 };
@@ -907,10 +1011,15 @@ export function elem<A>(
  * @since 2.0.0
  * @param E
  */
-export function elem<A>(E: Eq<A>): <E>(a: A, ma?: RemoteData<E, A>) => boolean | ((ma: RemoteData<E, A>) => boolean) {
+export function elem<A>(
+  E: Eq<A>
+): <E>(
+  a: A,
+  ma?: RemoteData<E, A>
+) => boolean | ((ma: RemoteData<E, A>) => boolean) {
   return (a, ma) => {
     if (ma === undefined) {
-      return ma => elem(E)(a, ma);
+      return (ma) => elem(E)(a, ma);
     }
 
     return isSuccess(ma) ? E.equals(a, ma.success) : false;
@@ -922,8 +1031,10 @@ export function elem<A>(E: Eq<A>): <E>(a: A, ma?: RemoteData<E, A>) => boolean |
  * @since 2.0.0
  * @param predicate
  */
-export function exists<A>(predicate: Predicate<A>): <E>(ma: RemoteData<E, A>) => boolean {
-  return ma => (isSuccess(ma) ? predicate(ma.success) : false);
+export function exists<A>(
+  predicate: Predicate<A>
+): <E>(ma: RemoteData<E, A>) => boolean {
+  return (ma) => (isSuccess(ma) ? predicate(ma.success) : false);
 }
 
 // -------------------------------------------------------------------------------------
@@ -956,10 +1067,13 @@ export const bind =
  */
 export const bindW: <N extends string, A, E2, B>(
   name: Exclude<N, keyof A>,
-  f: (a: A) => RemoteData<E2, B>,
+  f: (a: A) => RemoteData<E2, B>
 ) => <E1>(
-  fa: RemoteData<E1, A>,
-) => RemoteData<E1 | E2, { readonly [K in keyof A | N]: K extends keyof A ? A[K] : B }> = bind as any;
+  fa: RemoteData<E1, A>
+) => RemoteData<
+  E1 | E2,
+  { readonly [K in keyof A | N]: K extends keyof A ? A[K] : B }
+> = bind as any;
 
 // -------------------------------------------------------------------------------------
 // pipeable sequence S
@@ -976,10 +1090,13 @@ export const apS =
  */
 export const apSW: <A, N extends string, E2, B>(
   name: Exclude<N, keyof A>,
-  fb: RemoteData<E2, B>,
+  fb: RemoteData<E2, B>
 ) => <E1>(
-  fa: RemoteData<E1, A>,
-) => RemoteData<E1 | E2, { readonly [K in keyof A | N]: K extends keyof A ? A[K] : B }> = apS as any;
+  fa: RemoteData<E1, A>
+) => RemoteData<
+  E1 | E2,
+  { readonly [K in keyof A | N]: K extends keyof A ? A[K] : B }
+> = apS as any;
 
 // -------------------------------------------------------------------------------------
 // sequence T

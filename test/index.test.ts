@@ -1,4 +1,4 @@
-import * as RD from '../src';
+import * as RD from '../src/index';
 import * as EI from 'fp-ts/Either';
 import * as O from 'fp-ts/Option';
 import * as Number from 'fp-ts/number';
@@ -67,21 +67,33 @@ describe('RemoteData', () => {
     });
 
     it('fromEither', () => {
-      expect(RD.fromEither(EI.right('success'))).toStrictEqual(RD.success('success'));
-      expect(RD.fromEither(EI.left('error'))).toStrictEqual(RD.failure('error'));
+      expect(RD.fromEither(EI.right('success'))).toStrictEqual(
+        RD.success('success')
+      );
+      expect(RD.fromEither(EI.left('error'))).toStrictEqual(
+        RD.failure('error')
+      );
     });
 
     it('fromOption', () => {
-      expect(RD.fromOption(() => 'none')(O.some(1))).toStrictEqual(RD.success(1));
-      expect(RD.fromOption(() => 'none')(O.none)).toStrictEqual(RD.failure('none'));
+      expect(RD.fromOption(() => 'none')(O.some(1))).toStrictEqual(
+        RD.success(1)
+      );
+      expect(RD.fromOption(() => 'none')(O.none)).toStrictEqual(
+        RD.failure('none')
+      );
     });
 
     it('fromPredicate', () => {
-      const predicate: Predicate<number> = n => n > 2;
+      const predicate: Predicate<number> = (n) => n > 2;
       const onFalse = () => 'error';
 
-      expect(RD.fromPredicate(predicate, onFalse)(1)).toStrictEqual(RD.failure('error'));
-      expect(RD.fromPredicate(predicate, onFalse)(3)).toStrictEqual(RD.success(3));
+      expect(RD.fromPredicate(predicate, onFalse)(1)).toStrictEqual(
+        RD.failure('error')
+      );
+      expect(RD.fromPredicate(predicate, onFalse)(3)).toStrictEqual(
+        RD.success(3)
+      );
     });
   });
 
@@ -90,7 +102,7 @@ describe('RemoteData', () => {
       const fold = RD.fold(
         () => 'pending',
         (s: string) => `success${s.length}`,
-        (s: string) => `error${s.length}`,
+        (s: string) => `error${s.length}`
       );
 
       expect(fold(RD.pending)).toStrictEqual('pending');
@@ -157,12 +169,16 @@ describe('RemoteData', () => {
     it('filterOrElse', () => {
       const filterOrElse = RD.filterOrElse(
         (a: number) => a > 2,
-        (a: number) => `${a} too small`,
+        (a: number) => `${a} too small`
       );
 
       expect(filterOrElse(RD.success(3))).toStrictEqual(RD.success(3));
-      expect(filterOrElse(RD.success(1))).toStrictEqual(RD.failure(`1 too small`));
-      expect(filterOrElse(RD.failure('error'))).toStrictEqual(RD.failure(`error`));
+      expect(filterOrElse(RD.success(1))).toStrictEqual(
+        RD.failure(`1 too small`)
+      );
+      expect(filterOrElse(RD.failure('error'))).toStrictEqual(
+        RD.failure(`error`)
+      );
       expect(filterOrElse(RD.pending)).toStrictEqual(RD.pending);
     });
 
@@ -188,8 +204,12 @@ describe('RemoteData', () => {
       const f = (s: string): number => s.length;
       const g = (n: number): boolean => n > 2;
 
-      expect(pipe(RD.success(1), RD.bimap(f, g))).toStrictEqual(RD.success(false));
-      expect(pipe(RD.failure('error'), RD.bimap(f, g))).toStrictEqual(RD.failure(5));
+      expect(pipe(RD.success(1), RD.bimap(f, g))).toStrictEqual(
+        RD.success(false)
+      );
+      expect(pipe(RD.failure('error'), RD.bimap(f, g))).toStrictEqual(
+        RD.failure(5)
+      );
       expect(pipe(RD.pending, RD.bimap(f, g))).toStrictEqual(RD.pending);
     });
 
@@ -197,27 +217,41 @@ describe('RemoteData', () => {
       const f = (s: string): number => s.length;
 
       expect(pipe(RD.success(1), RD.mapLeft(f))).toStrictEqual(RD.success(1));
-      expect(pipe(RD.failure('error'), RD.mapLeft(f))).toStrictEqual(RD.failure(5));
+      expect(pipe(RD.failure('error'), RD.mapLeft(f))).toStrictEqual(
+        RD.failure(5)
+      );
       expect(pipe(RD.pending, RD.mapLeft(f))).toStrictEqual(RD.pending);
     });
 
     it('ap', () => {
       const f = (s: string) => s.length;
 
-      expect(RD.ap(RD.success('abc'))(RD.success(f))).toStrictEqual(RD.success(3));
-      expect(RD.ap(RD.failure('error'))(RD.success(f))).toStrictEqual(RD.failure('error'));
+      expect(RD.ap(RD.success('abc'))(RD.success(f))).toStrictEqual(
+        RD.success(3)
+      );
+      expect(RD.ap(RD.failure('error'))(RD.success(f))).toStrictEqual(
+        RD.failure('error')
+      );
       expect(RD.ap(RD.pending)(RD.success(f))).toStrictEqual(RD.pending);
 
-      expect(RD.ap(RD.success<string, string>('abc'))(RD.failure('error'))).toStrictEqual(RD.failure('error'));
-      expect(RD.ap(RD.failure('e'))(RD.failure('error'))).toStrictEqual(RD.failure('error'));
+      expect(
+        RD.ap(RD.success<string, string>('abc'))(RD.failure('error'))
+      ).toStrictEqual(RD.failure('error'));
+      expect(RD.ap(RD.failure('e'))(RD.failure('error'))).toStrictEqual(
+        RD.failure('error')
+      );
     });
 
     it('apFirst', () => {
-      expect(pipe(RD.success('a'), RD.apFirst(RD.success(1)))).toStrictEqual(RD.success('a'));
+      expect(pipe(RD.success('a'), RD.apFirst(RD.success(1)))).toStrictEqual(
+        RD.success('a')
+      );
     });
 
     it('apSecond', () => {
-      expect(pipe(RD.success('a'), RD.apSecond(RD.success(1)))).toStrictEqual(RD.success(1));
+      expect(pipe(RD.success('a'), RD.apSecond(RD.success(1)))).toStrictEqual(
+        RD.success(1)
+      );
     });
 
     it('of', () => {
@@ -228,80 +262,88 @@ describe('RemoteData', () => {
       expect(
         pipe(
           RD.success('abc'),
-          RD.chain(s => RD.success(s.length)),
-        ),
+          RD.chain((s) => RD.success(s.length))
+        )
       ).toStrictEqual(RD.success(3));
 
       expect(
         pipe(
           RD.success('abc'),
-          RD.chain(() => RD.failure('error')),
-        ),
+          RD.chain(() => RD.failure('error'))
+        )
       ).toStrictEqual(RD.failure('error'));
 
       expect(
         pipe(
           RD.success('abc'),
-          RD.chain(() => RD.pending),
-        ),
+          RD.chain(() => RD.pending)
+        )
       ).toStrictEqual(RD.pending);
 
       expect(
         pipe(
           RD.failure('error'),
-          RD.chain((s: string) => RD.success(s.length)),
-        ),
+          RD.chain((s: string) => RD.success(s.length))
+        )
       ).toStrictEqual(RD.failure('error'));
 
       expect(
         pipe(
           RD.pending,
-          RD.chain((s: string) => RD.success(s.length)),
-        ),
+          RD.chain((s: string) => RD.success(s.length))
+        )
       ).toStrictEqual(RD.pending);
     });
 
     it('chainFirst', () => {
       const f = (s: string) => RD.success<string, number>(s.length);
 
-      expect(pipe(RD.success('abc'), RD.chainFirst(f))).toStrictEqual(RD.success('abc'));
-      expect(pipe(RD.failure<string, string>('maError'), RD.chainFirst(f))).toStrictEqual(RD.failure('maError'));
+      expect(pipe(RD.success('abc'), RD.chainFirst(f))).toStrictEqual(
+        RD.success('abc')
+      );
+      expect(
+        pipe(RD.failure<string, string>('maError'), RD.chainFirst(f))
+      ).toStrictEqual(RD.failure('maError'));
     });
 
     it('chainFirstW', () => {
       const f = (s: string) => RD.success<boolean, number>(s.length);
 
-      expect(pipe(RD.success('abc'), RD.chainFirstW(f))).toStrictEqual(RD.success('abc'));
-      expect(pipe(RD.failure<string, string>('maError'), RD.chainFirstW(f))).toStrictEqual(RD.failure('maError'));
+      expect(pipe(RD.success('abc'), RD.chainFirstW(f))).toStrictEqual(
+        RD.success('abc')
+      );
+      expect(
+        pipe(RD.failure<string, string>('maError'), RD.chainFirstW(f))
+      ).toStrictEqual(RD.failure('maError'));
     });
 
     it('chainEither', () => {
       expect(
         pipe(
           RD.success(1),
-          RD.chainEither(a => EI.right(a + 1)),
-        ),
+          RD.chainEither((a) => EI.right(a + 1))
+        )
       ).toStrictEqual(RD.success(2));
 
       expect(
         pipe(
           RD.success(1),
-          RD.chainEither(a => EI.left(a + 1)),
-        ),
+          RD.chainEither((a) => EI.left(a + 1))
+        )
       ).toStrictEqual(RD.failure(2));
 
       expect(
         pipe(
           RD.failure('error'),
-          RD.chainEither(a => EI.right(a + 1)),
-        ),
+          RD.chainEither((a) => EI.right(a + 1))
+        )
       ).toStrictEqual(RD.failure('error'));
 
       expect(
         pipe(
           RD.pending,
-          RD.chainEither(a => EI.right(a + 1)),
-        ),
+          RD.chainEither((a) => EI.right(a + 1))
+        )
       ).toStrictEqual(RD.pending);
     });
 
@@ -311,8 +353,12 @@ describe('RemoteData', () => {
 
       expect(pipe(RD.success(1), RD.alt(f))).toStrictEqual(RD.success(1));
 
-      expect(pipe(RD.failure('error'), RD.alt(f))).toStrictEqual(RD.success(10));
-      expect(pipe(RD.failure('error'), RD.alt(f2))).toStrictEqual(RD.failure('error2'));
+      expect(pipe(RD.failure('error'), RD.alt(f))).toStrictEqual(
+        RD.success(10)
+      );
+      expect(pipe(RD.failure('error'), RD.alt(f2))).toStrictEqual(
+        RD.failure('error2')
+      );
 
       expect(pipe(RD.pending, RD.alt(f))).toStrictEqual(RD.pending);
     });
@@ -321,22 +367,22 @@ describe('RemoteData', () => {
       expect(
         pipe(
           RD.success(1),
-          RD.extend(() => 2),
-        ),
+          RD.extend(() => 2)
+        )
       ).toStrictEqual(RD.success(2));
 
       expect(
         pipe(
           RD.failure('error'),
-          RD.extend(() => 2),
-        ),
+          RD.extend(() => 2)
+        )
       ).toStrictEqual(RD.failure('error'));
 
       expect(
         pipe(
           RD.pending,
-          RD.extend(() => 2),
-        ),
+          RD.extend(() => 2)
+        )
       ).toStrictEqual(RD.pending);
     });
 
@@ -344,29 +390,35 @@ describe('RemoteData', () => {
       expect(
         pipe(
           RD.success('bar'),
-          RD.reduce('foo', (b, a) => b + a),
-        ),
+          RD.reduce('foo', (b, a) => b + a)
+        )
       ).toStrictEqual('foobar');
 
       expect(
         pipe(
           RD.failure('bar'),
-          RD.reduce('foo', (b, a) => b + a),
-        ),
+          RD.reduce('foo', (b, a) => b + a)
+        )
       ).toStrictEqual('foo');
 
       expect(
         pipe(
           RD.pending,
-          RD.reduce('foo', (b, a) => b + a),
-        ),
+          RD.reduce('foo', (b, a) => b + a)
+        )
       ).toStrictEqual('foo');
     });
 
     it('foldMap', () => {
-      expect(pipe(RD.success('a'), RD.foldMap(monoidString)(identity))).toStrictEqual('a');
-      expect(pipe(RD.failure(1), RD.foldMap(monoidString)(identity))).toStrictEqual('');
-      expect(pipe(RD.pending, RD.foldMap(monoidString)(identity))).toStrictEqual('');
+      expect(
+        pipe(RD.success('a'), RD.foldMap(monoidString)(identity))
+      ).toStrictEqual('a');
+      expect(
+        pipe(RD.failure(1), RD.foldMap(monoidString)(identity))
+      ).toStrictEqual('');
+      expect(
+        pipe(RD.pending, RD.foldMap(monoidString)(identity))
+      ).toStrictEqual('');
     });
 
     it('reduceRight', () => {
@@ -378,18 +430,26 @@ describe('RemoteData', () => {
     });
 
     it('traverse', () => {
-      const traverse = RD.traverse(O.Applicative)((n: number) => (n >= 2 ? O.some(n) : O.none));
+      const traverse = RD.traverse(O.Applicative)((n: number) =>
+        n >= 2 ? O.some(n) : O.none
+      );
 
-      expect(pipe(RD.failure('a'), traverse)).toStrictEqual(O.some(RD.failure('a')));
+      expect(pipe(RD.failure('a'), traverse)).toStrictEqual(
+        O.some(RD.failure('a'))
+      );
       expect(pipe(RD.success(1), traverse)).toStrictEqual(O.none);
-      expect(pipe(RD.success(3), traverse)).toStrictEqual(O.some(RD.success(3)));
+      expect(pipe(RD.success(3), traverse)).toStrictEqual(
+        O.some(RD.success(3))
+      );
       expect(pipe(RD.pending, traverse)).toStrictEqual(O.some(RD.pending));
     });
 
     it('sequence', () => {
       const sequence = RD.sequence(O.Applicative);
 
-      expect(sequence(RD.success(O.some(1)))).toStrictEqual(O.some(RD.success(1)));
+      expect(sequence(RD.success(O.some(1)))).toStrictEqual(
+        O.some(RD.success(1))
+      );
       expect(sequence(RD.failure('a'))).toStrictEqual(O.some(RD.failure('a')));
       expect(sequence(RD.success(O.none))).toStrictEqual(O.none);
       expect(sequence(RD.pending)).toStrictEqual(O.some(RD.pending));
@@ -402,7 +462,7 @@ describe('RemoteData', () => {
       expect(
         RD.tryCatch(() => {
           throw new Error('Ooops');
-        }, identity),
+        }, identity)
       ).toStrictEqual(RD.failure(new Error('Ooops')));
     });
 
@@ -425,16 +485,16 @@ describe('RemoteData', () => {
       pipe(
         RD.Do,
         RD.bind('firstName', () => RD.success('Pierre')),
-        RD.bind('age', ({ firstName }) => RD.success(firstName.length)),
-      ),
+        RD.bind('age', ({ firstName }) => RD.success(firstName.length))
+      )
     ).toStrictEqual(RD.success({ firstName: 'Pierre', age: 6 }));
 
     expect(
       pipe(
         RD.Do,
         RD.bind('firstName', () => RD.success('Pierre')),
-        RD.bind('age', ({ firstName }) => RD.failure(firstName.length < 10)),
-      ),
+        RD.bind('age', ({ firstName }) => RD.failure(firstName.length < 10))
+      )
     ).toStrictEqual(RD.failure(true));
   });
 
@@ -462,21 +522,39 @@ describe('RemoteData', () => {
   });
 
   it('monad', () => {
-    expect(RD.remoteData.map(RD.success(1), a => a + 1)).toStrictEqual(RD.success(2));
+    expect(RD.remoteData.map(RD.success(1), (a) => a + 1)).toStrictEqual(
+      RD.success(2)
+    );
     expect(
       RD.remoteData.ap(
         RD.success((a: number) => a + 1),
-        RD.success(1),
-      ),
+        RD.success(1)
+      )
     ).toStrictEqual(RD.success(2));
-    expect(RD.remoteData.chain(RD.success(1), a => RD.success(a + 1))).toStrictEqual(RD.success(2));
+    expect(
+      RD.remoteData.chain(RD.success(1), (a) => RD.success(a + 1))
+    ).toStrictEqual(RD.success(2));
     expect(RD.remoteData.reduce(RD.success(1), 1, (a, b) => a + b)).toBe(2);
-    expect(RD.remoteData.foldMap(monoidString)(RD.success('a'), identity)).toBe('a');
-    expect(RD.remoteData.reduceRight(RD.success(1), 1, (a, b) => a + b)).toBe(2);
-    expect(RD.remoteData.traverse(O.option)(RD.success(1), a => O.some(a + 1))).toStrictEqual(O.some(RD.success(2)));
-    expect(RD.remoteData.bimap(RD.success(1), identity, a => a + 1)).toStrictEqual(RD.success(2));
-    expect(RD.remoteData.mapLeft(RD.failure(1), a => a + 1)).toStrictEqual(RD.failure(2));
-    expect(RD.remoteData.alt(RD.failure('error'), () => RD.success(2))).toStrictEqual(RD.success(2));
-    expect(RD.remoteData.extend(RD.success(1), () => 2)).toStrictEqual(RD.success(2));
+    expect(RD.remoteData.foldMap(monoidString)(RD.success('a'), identity)).toBe(
+      'a'
+    );
+    expect(RD.remoteData.reduceRight(RD.success(1), 1, (a, b) => a + b)).toBe(
+      2
+    );
+    expect(
+      RD.remoteData.traverse(O.option)(RD.success(1), (a) => O.some(a + 1))
+    ).toStrictEqual(O.some(RD.success(2)));
+    expect(
+      RD.remoteData.bimap(RD.success(1), identity, (a) => a + 1)
+    ).toStrictEqual(RD.success(2));
+    expect(RD.remoteData.mapLeft(RD.failure(1), (a) => a + 1)).toStrictEqual(
+      RD.failure(2)
+    );
+    expect(
+      RD.remoteData.alt(RD.failure('error'), () => RD.success(2))
+    ).toStrictEqual(RD.success(2));
+    expect(RD.remoteData.extend(RD.success(1), () => 2)).toStrictEqual(
+      RD.success(2)
+    );
   });
 });
