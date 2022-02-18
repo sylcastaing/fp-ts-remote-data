@@ -1,5 +1,5 @@
 {
-  "version": "2.9.0",
+  "version": "2.11.0",
   "name": "fp-ts-remote-data",
   "description": "Remote data type for fp-ts",
   "homepage": "https://github.com/sylcastaing/fp-ts-remote-data",
@@ -70,7 +70,7 @@
     "semi": true,
     "singleQuote": true,
     "trailingComma": "es5",
-    "endOfLine":"auto"
+    "endOfLine": "auto"
   },
   "engines": {
     "node": ">=10"
